@@ -365,6 +365,180 @@ select:disabled {
   }
 }
 
+.warning-message {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  color: #92400e;
+  font-size: 13px;
+  padding: 10px 12px;
+}
+
+.status-tag {
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+}
+
+.status-tag.none,
+.status-tag.pending {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.status-tag.open {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-tag.closed,
+.status-tag.confirmed {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.rating-input {
+  display: grid;
+  gap: 6px;
+}
+
+.rating-input label {
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.star-rating {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+
+.star-btn {
+  background: transparent;
+  border: 0;
+  color: #d1d5db;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.15s;
+}
+
+.star-btn:hover {
+  transform: scale(1.1);
+}
+
+.star-btn.active {
+  color: #fbbf24;
+}
+
+.rating-value {
+  color: #4b5563;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.secondary-button {
+  align-items: center;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #374151;
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 600;
+  gap: 6px;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+}
+
+.secondary-button:hover {
+  background: #e5e7eb;
+}
+
+.review-history {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.review-history h4 {
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+
+.history-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  padding: 12px;
+}
+
+.history-item.current {
+  background: #ecfdf5;
+  border-color: #10b981;
+}
+
+.history-header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.version-badge {
+  background: #6366f1;
+  border-radius: 4px;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+
+.current-badge {
+  background: #10b981;
+  border-radius: 4px;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+
+.rating-display {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.history-comment {
+  color: #374151;
+  margin: 0 0 6px;
+}
+
+.history-date {
+  color: #9ca3af;
+  font-size: 12px;
+  margin: 0;
+}
+
+.close-btn {
+  background: transparent;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 8px 16px;
+  width: 100%;
+}
+
+.close-btn:hover {
+  background: #f3f4f6;
+}
+
 @media (max-width: 640px) {
   .hero {
     min-height: 520px;

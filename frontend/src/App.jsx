@@ -49,7 +49,17 @@ export default function App() {
         onClaim={(orderId, workerId) => run(() => api.claimOrder(orderId, workerId))}
         onAssign={(orderId, workerId) => run(() => api.assignOrder(orderId, workerId))}
         onProgress={(orderId, payload) => run(() => api.addProgress(orderId, payload))}
-        onReview={(orderId, payload) => run(() => api.createReview(orderId, payload))}
+        onReview={async (orderId, payload) => {
+          try {
+            setError("");
+            const result = await api.createReview(orderId, payload);
+            await refresh();
+            return result;
+          } catch (err) {
+            setError(err.message);
+            throw err;
+          }
+        }}
       />
     </>
   );

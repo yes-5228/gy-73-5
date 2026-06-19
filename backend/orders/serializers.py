@@ -11,10 +11,12 @@ def worker_summary(worker):
         "phone": worker.phone,
         "vehicle": worker.vehicle,
         "rating": float(worker.rating),
+        "review_count": worker.review_count if hasattr(worker, "review_count") else 0,
     }
 
 
 def order_to_dict(order, include_detail=False):
+    can_review, review_reason = order.can_review()
     data = {
         "id": order.id,
         "customer_name": order.customer_name,
@@ -27,6 +29,12 @@ def order_to_dict(order, include_detail=False):
         "note": order.note,
         "status": order.status,
         "status_label": order.get_status_display(),
+        "exception_status": order.exception_status,
+        "exception_status_label": order.get_exception_status_display(),
+        "settlement_status": order.settlement_status,
+        "settlement_status_label": order.get_settlement_status_display(),
+        "can_review": can_review,
+        "review_reason": review_reason,
         "claimed_by": worker_summary(order.claimed_by),
         "assigned_to": worker_summary(order.assigned_to),
         "created_at": order.created_at.isoformat(),
@@ -43,12 +51,13 @@ def order_to_dict(order, include_detail=False):
             }
             for event in ProgressEvent.objects.filter(order=order)
         ]
-        review = ServiceReview.objects.filter(order=order).first()
+        review = ServiceReview.get_current_for_order(order)
         data["review"] = (
             {
                 "id": review.id,
                 "rating": review.rating,
                 "comment": review.comment,
+                "version": review.version,
                 "created_at": review.created_at.isoformat(),
             }
             if review
