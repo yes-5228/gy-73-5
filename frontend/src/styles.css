@@ -279,6 +279,32 @@ select:disabled {
   margin: 12px 0;
 }
 
+.order-review-badge {
+  align-items: center;
+  border-radius: 6px;
+  display: flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+}
+
+.order-review-badge.reviewed {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.order-review-badge.can-review {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.order-review-badge.cannot-review {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 .button-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

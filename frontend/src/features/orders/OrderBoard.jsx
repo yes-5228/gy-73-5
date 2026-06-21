@@ -1,4 +1,4 @@
-import { ClipboardList, Truck } from "lucide-react";
+import { ClipboardList, Truck, Star, AlertCircle } from "lucide-react";
 
 import StatusBadge from "../../components/StatusBadge.jsx";
 
@@ -29,6 +29,30 @@ export default function OrderBoard({ orders, workers, onClaim, onAssign }) {
               <span>抢单师傅：{order.claimed_by?.name || "暂无"}</span>
               <span>派单师傅：{order.assigned_to?.name || "暂无"}</span>
             </div>
+            {order.status === "completed" && order.has_review && !order.can_review && (
+              <div className="order-review-badge cannot-review">
+                <AlertCircle size={14} />
+                <span>已评价 {order.review_rating} 星，当前不可更新：{order.review_reason}</span>
+              </div>
+            )}
+            {order.status === "completed" && order.has_review && order.can_review && (
+              <div className="order-review-badge reviewed">
+                <Star size={14} fill="#fbbf24" color="#fbbf24" />
+                <span>已评价 {order.review_rating} 星，可更新</span>
+              </div>
+            )}
+            {order.status === "completed" && !order.has_review && order.can_review && (
+              <div className="order-review-badge can-review">
+                <Star size={14} />
+                <span>待评价</span>
+              </div>
+            )}
+            {order.status === "completed" && !order.has_review && !order.can_review && (
+              <div className="order-review-badge cannot-review">
+                <AlertCircle size={14} />
+                <span>不可评价：{order.review_reason}</span>
+              </div>
+            )}
             <div className="button-row">
               <select
                 aria-label="选择抢单师傅"

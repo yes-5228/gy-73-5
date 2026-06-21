@@ -2,14 +2,14 @@ import { Star, History, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 export default function ReviewPanel({ orders, onReview }) {
-  const completedOrders = orders.filter((order) => order.status === "completed");
+  const reviewableOrders = orders.filter((order) => order.can_review);
   const [orderId, setOrderId] = useState("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [reviewHistory, setReviewHistory] = useState([]);
 
-  const selectedOrder = completedOrders.find((o) => o.id === Number(orderId)) || null;
+  const selectedOrder = reviewableOrders.find((o) => o.id === Number(orderId)) || null;
 
   async function submit(event) {
     event.preventDefault();
@@ -39,7 +39,7 @@ export default function ReviewPanel({ orders, onReview }) {
     setReviewHistory([]);
 
     if (id) {
-      const order = completedOrders.find((o) => o.id === Number(id));
+      const order = reviewableOrders.find((o) => o.id === Number(id));
       if (order && order.review) {
         setRating(order.review.rating);
         setComment(order.review.comment || "");
@@ -78,12 +78,11 @@ export default function ReviewPanel({ orders, onReview }) {
         <div className="form-field">
           <label>选择订单</label>
           <select value={orderId} onChange={handleOrderChange}>
-            <option value="">请选择已完成订单</option>
-            {completedOrders.map((order) => (
-              <option value={order.id} key={order.id} disabled={!order.can_review}>
+            <option value="">请选择可评价订单</option>
+            {reviewableOrders.map((order) => (
+              <option value={order.id} key={order.id}>
                 {order.customer_name} · {order.destination}
-                {order.review ? ` [${order.review.rating}星 已评价]` : ""}
-                {!order.can_review ? " (不可评价)" : ""}
+                {order.review ? ` [${order.review.rating}星 已评价，可更新]` : ""}
               </option>
             ))}
           </select>
@@ -91,22 +90,15 @@ export default function ReviewPanel({ orders, onReview }) {
 
         {selectedOrder && (
           <div className="order-review-status">
-            {selectedOrder.can_review ? (
-              selectedOrder.review ? (
-                <div className="status-info reviewed">
-                  <Star size={16} fill="#fbbf24" color="#fbbf24" />
-                  <span>已评价 {selectedOrder.review.rating} 星，可更新</span>
-                </div>
-              ) : (
-                <div className="status-info can-review">
-                  <Star size={16} />
-                  <span>可评价</span>
-                </div>
-              )
+            {selectedOrder.review ? (
+              <div className="status-info reviewed">
+                <Star size={16} fill="#fbbf24" color="#fbbf24" />
+                <span>已评价 {selectedOrder.review.rating} 星，可更新</span>
+              </div>
             ) : (
-              <div className="status-info cannot-review">
-                <AlertCircle size={16} />
-                <span>{selectedOrder.review_reason}</span>
+              <div className="status-info can-review">
+                <Star size={16} />
+                <span>可评价</span>
               </div>
             )}
           </div>
@@ -132,9 +124,8 @@ export default function ReviewPanel({ orders, onReview }) {
                 <button
                   type="button"
                   key={star}
-                  className={`star-btn ${star <= rating ? "active" : ""} ${!selectedOrder.can_review ? "disabled" : ""}`}
-                  onClick={() => selectedOrder.can_review && setRating(star)}
-                  disabled={!selectedOrder.can_review}
+                  className={`star-btn ${star <= rating ? "active" : ""}`}
+                  onClick={() => setRating(star)}
                 >
                   <Star size={24} fill={star <= rating ? "#fbbf24" : "none"} />
                 </button>
@@ -152,7 +143,6 @@ export default function ReviewPanel({ orders, onReview }) {
               placeholder="请输入评价内容..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              disabled={!selectedOrder.can_review}
             />
           </div>
         )}
@@ -162,7 +152,6 @@ export default function ReviewPanel({ orders, onReview }) {
             <button
               className="primary-button"
               type="submit"
-              disabled={!selectedOrder.can_review}
             >
               {selectedOrder.review ? "更新评价" : "提交评价"}
             </button>
@@ -179,7 +168,11 @@ export default function ReviewPanel({ orders, onReview }) {
         )}
 
         {!selectedOrder && orderId === "" && (
-          <p className="muted">请从上方选择一个已完成的订单进行评价</p>
+          <p className="muted">
+            {reviewableOrders.length > 0
+              ? "请从上方选择一个可评价的订单"
+              : "暂无可评价的订单"}
+          </p>
         )}
       </form>
 
