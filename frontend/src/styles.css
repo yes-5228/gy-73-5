@@ -539,6 +539,62 @@ select:disabled {
   background: #f3f4f6;
 }
 
+.form-field {
+  display: grid;
+  gap: 6px;
+}
+
+.form-field label {
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.inline-stars {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.order-review-status {
+  margin-bottom: 4px;
+}
+
+.status-info {
+  align-items: center;
+  border-radius: 6px;
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 12px;
+}
+
+.status-info.reviewed {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.status-info.can-review {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.status-info.cannot-review {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.star-btn.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.star-btn.disabled:hover {
+  transform: none;
+}
+
 @media (max-width: 640px) {
   .hero {
     min-height: 520px;

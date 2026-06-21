@@ -17,6 +17,18 @@ def worker_summary(worker):
 
 def order_to_dict(order, include_detail=False):
     can_review, review_reason = order.can_review()
+    review = ServiceReview.get_current_for_order(order)
+    review_info = (
+        {
+            "id": review.id,
+            "rating": review.rating,
+            "comment": review.comment,
+            "version": review.version,
+            "created_at": review.created_at.isoformat(),
+        }
+        if review
+        else None
+    )
     data = {
         "id": order.id,
         "customer_name": order.customer_name,
@@ -35,6 +47,9 @@ def order_to_dict(order, include_detail=False):
         "settlement_status_label": order.get_settlement_status_display(),
         "can_review": can_review,
         "review_reason": review_reason,
+        "has_review": review is not None,
+        "review_rating": review.rating if review else None,
+        "review": review_info,
         "claimed_by": worker_summary(order.claimed_by),
         "assigned_to": worker_summary(order.assigned_to),
         "created_at": order.created_at.isoformat(),
@@ -51,16 +66,4 @@ def order_to_dict(order, include_detail=False):
             }
             for event in ProgressEvent.objects.filter(order=order)
         ]
-        review = ServiceReview.get_current_for_order(order)
-        data["review"] = (
-            {
-                "id": review.id,
-                "rating": review.rating,
-                "comment": review.comment,
-                "version": review.version,
-                "created_at": review.created_at.isoformat(),
-            }
-            if review
-            else None
-        )
     return data

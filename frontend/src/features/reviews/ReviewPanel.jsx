@@ -1,26 +1,24 @@
-import { Star, History } from "lucide-react";
+import { Star, History, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 export default function ReviewPanel({ orders, onReview }) {
-  const reviewableOrders = orders.filter((order) => order.can_review);
+  const completedOrders = orders.filter((order) => order.status === "completed");
   const [orderId, setOrderId] = useState("");
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [reviewHistory, setReviewHistory] = useState([]);
 
-  const selectedOrderData = orders.find((o) => o.id === Number(orderId));
+  const selectedOrder = completedOrders.find((o) => o.id === Number(orderId)) || null;
 
   async function submit(event) {
     event.preventDefault();
-    if (!orderId) return;
+    if (!orderId || !selectedOrder?.can_review) return;
     const result = await onReview(Number(orderId), { rating: Number(rating), comment });
     if (result && result.history) {
       setReviewHistory(result.history);
       setShowHistory(true);
     }
-    setComment("");
   }
 
   async function fetchHistory(orderId) {
@@ -39,9 +37,9 @@ export default function ReviewPanel({ orders, onReview }) {
     setOrderId(id);
     setShowHistory(false);
     setReviewHistory([]);
+
     if (id) {
-      const order = orders.find((o) => o.id === Number(id));
-      setSelectedOrder(order);
+      const order = completedOrders.find((o) => o.id === Number(id));
       if (order && order.review) {
         setRating(order.review.rating);
         setComment(order.review.comment || "");
@@ -50,8 +48,24 @@ export default function ReviewPanel({ orders, onReview }) {
         setComment("");
       }
     } else {
-      setSelectedOrder(null);
+      setRating(5);
+      setComment("");
     }
+  }
+
+  function renderStars(count, size = 14) {
+    return (
+      <span className="inline-stars">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            size={size}
+            fill={i < count ? "#fbbf24" : "none"}
+            color={i < count ? "#fbbf24" : "#d1d5db"}
+          />
+        ))}
+      </span>
+    );
   }
 
   return (
@@ -61,98 +75,124 @@ export default function ReviewPanel({ orders, onReview }) {
         <h3>完成评价</h3>
       </div>
       <form className="review-form" onSubmit={submit}>
-        <select value={orderId} onChange={handleOrderChange}>
-          <option value="">选择可评价订单</option>
-          {reviewableOrders.map((order) => (
-            <option value={order.id} key={order.id}>
-              {order.customer_name} · {order.destination}
-              {order.review ? " (已评价，可更新)" : ""}
-            </option>
-          ))}
-        </select>
+        <div className="form-field">
+          <label>选择订单</label>
+          <select value={orderId} onChange={handleOrderChange}>
+            <option value="">请选择已完成订单</option>
+            {completedOrders.map((order) => (
+              <option value={order.id} key={order.id} disabled={!order.can_review}>
+                {order.customer_name} · {order.destination}
+                {order.review ? ` [${order.review.rating}星 已评价]` : ""}
+                {!order.can_review ? " (不可评价)" : ""}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {selectedOrderData && !selectedOrderData.can_review && (
-          <div className="warning-message">
-            ⚠️ {selectedOrderData.review_reason}
+        {selectedOrder && (
+          <div className="order-review-status">
+            {selectedOrder.can_review ? (
+              selectedOrder.review ? (
+                <div className="status-info reviewed">
+                  <Star size={16} fill="#fbbf24" color="#fbbf24" />
+                  <span>已评价 {selectedOrder.review.rating} 星，可更新</span>
+                </div>
+              ) : (
+                <div className="status-info can-review">
+                  <Star size={16} />
+                  <span>可评价</span>
+                </div>
+              )
+            ) : (
+              <div className="status-info cannot-review">
+                <AlertCircle size={16} />
+                <span>{selectedOrder.review_reason}</span>
+              </div>
+            )}
           </div>
         )}
 
-        {selectedOrderData && selectedOrderData.exception_status !== "none" && (
-          <div className={`status-tag ${selectedOrderData.exception_status}`}>
-            异常状态: {selectedOrderData.exception_status_label}
+        {selectedOrder && selectedOrder.exception_status !== "none" && (
+          <div className={`status-tag ${selectedOrder.exception_status}`}>
+            异常状态: {selectedOrder.exception_status_label}
           </div>
         )}
 
-        {selectedOrderData && (
-          <div className={`status-tag ${selectedOrderData.settlement_status}`}>
-            结算状态: {selectedOrderData.settlement_status_label}
+        {selectedOrder && (
+          <div className={`status-tag ${selectedOrder.settlement_status}`}>
+            结算状态: {selectedOrder.settlement_status_label}
           </div>
         )}
 
-        <div className="rating-input">
-          <label>评分:</label>
-          <div className="star-rating">
-            {[1, 2, 3, 4, 5].map((star) => (
+        {selectedOrder && (
+          <div className="rating-input">
+            <label>评分</label>
+            <div className="star-rating">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  type="button"
+                  key={star}
+                  className={`star-btn ${star <= rating ? "active" : ""} ${!selectedOrder.can_review ? "disabled" : ""}`}
+                  onClick={() => selectedOrder.can_review && setRating(star)}
+                  disabled={!selectedOrder.can_review}
+                >
+                  <Star size={24} fill={star <= rating ? "#fbbf24" : "none"} />
+                </button>
+              ))}
+              <span className="rating-value">{rating} 星</span>
+            </div>
+          </div>
+        )}
+
+        {selectedOrder && (
+          <div className="form-field">
+            <label>评价内容</label>
+            <textarea
+              rows="3"
+              placeholder="请输入评价内容..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              disabled={!selectedOrder.can_review}
+            />
+          </div>
+        )}
+
+        {selectedOrder && (
+          <div className="button-row">
+            <button
+              className="primary-button"
+              type="submit"
+              disabled={!selectedOrder.can_review}
+            >
+              {selectedOrder.review ? "更新评价" : "提交评价"}
+            </button>
+            {selectedOrder.review && (
               <button
                 type="button"
-                key={star}
-                className={`star-btn ${star <= rating ? "active" : ""}`}
-                onClick={() => setRating(star)}
+                className="secondary-button"
+                onClick={() => fetchHistory(Number(orderId))}
               >
-                <Star size={24} fill={star <= rating ? "#fbbf24" : "none"} />
+                <History size={16} /> 查看历史
               </button>
-            ))}
-            <span className="rating-value">{rating} 星</span>
+            )}
           </div>
-        </div>
+        )}
 
-        <input
-          type="number"
-          min="1"
-          max="5"
-          value={rating}
-          onChange={(e) => setRating(Number(e.target.value))}
-          style={{ display: "none" }}
-        />
-        <textarea
-          rows="3"
-          placeholder="客户评价内容..."
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-        />
-
-        <div className="button-row">
-          <button
-            className="primary-button"
-            type="submit"
-            disabled={!orderId || !selectedOrderData?.can_review}
-          >
-            {selectedOrderData?.review ? "更新评价" : "提交评价"}
-          </button>
-          {selectedOrderData?.review && (
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={() => fetchHistory(Number(orderId))}
-            >
-              <History size={16} /> 查看历史
-            </button>
-          )}
-        </div>
+        {!selectedOrder && orderId === "" && (
+          <p className="muted">请从上方选择一个已完成的订单进行评价</p>
+        )}
       </form>
 
       {showHistory && reviewHistory.length > 0 && (
         <div className="review-history">
           <h4>评价历史记录</h4>
-          {reviewHistory.map((review, index) => (
+          {reviewHistory.map((review) => (
             <div key={review.id} className={`history-item ${review.is_current ? "current" : ""}`}>
               <div className="history-header">
                 <span className="version-badge">版本 {review.version}</span>
                 {review.is_current && <span className="current-badge">当前生效</span>}
                 <span className="rating-display">
-                  {[...Array(review.rating)].map((_, i) => (
-                    <Star key={i} size={14} fill="#fbbf24" color="#fbbf24" />
-                  ))}
+                  {renderStars(review.rating, 14)}
                 </span>
               </div>
               <p className="history-comment">{review.comment || "(无评价内容)"}</p>
