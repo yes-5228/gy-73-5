@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from tracking.models import ProgressEvent
 from reviews.models import ServiceReview
 
@@ -15,20 +17,65 @@ def worker_summary(worker):
     }
 
 
-def order_to_dict(order, include_detail=False):
+def _review_to_dict(review):
+    return {
+        "id": review.id,
+        "rating": review.rating,
+        "comment": review.comment,
+        "version": review.version,
+        "created_at": review.created_at.isoformat(),
+    }
+
+
+def _build_review_map(orders):
+    order_ids = [order.id for order in orders]
+    if not order_ids:
+        return {}
+
+    reviews = ServiceReview.objects.filter(
+        order_id__in=order_ids,
+        is_current=True,
+    ).select_related("order")
+
+    review_map = {}
+    for review in reviews:
+        review_map[review.order_id] = review
+
+    return review_map
+
+
+def _build_progress_map(order_ids):
+    if not order_ids:
+        return {}
+
+    events = ProgressEvent.objects.filter(order_id__in=order_ids).order_by("created_at")
+
+    progress_map = defaultdict(list)
+    for event in events:
+        progress_map[event.order_id].append(
+            {
+                "id": event.id,
+                "stage": event.stage,
+                "stage_label": event.get_stage_display(),
+                "message": event.message,
+                "created_at": event.created_at.isoformat(),
+            }
+        )
+
+    return dict(progress_map)
+
+
+def order_to_dict(order, include_detail=False, review_map=None, progress_map=None):
     can_review, review_reason = order.can_review()
-    review = ServiceReview.get_current_for_order(order)
-    review_info = (
-        {
-            "id": review.id,
-            "rating": review.rating,
-            "comment": review.comment,
-            "version": review.version,
-            "created_at": review.created_at.isoformat(),
-        }
-        if review
-        else None
-    )
+
+    review = None
+    if review_map is not None:
+        review = review_map.get(order.id)
+    else:
+        review = ServiceReview.get_current_for_order(order)
+
+    review_info = _review_to_dict(review) if review else None
+
     data = {
         "id": order.id,
         "customer_name": order.customer_name,
@@ -55,15 +102,35 @@ def order_to_dict(order, include_detail=False):
         "created_at": order.created_at.isoformat(),
         "updated_at": order.updated_at.isoformat(),
     }
+
     if include_detail:
-        data["progress"] = [
-            {
-                "id": event.id,
-                "stage": event.stage,
-                "stage_label": event.get_stage_display(),
-                "message": event.message,
-                "created_at": event.created_at.isoformat(),
-            }
-            for event in ProgressEvent.objects.filter(order=order)
-        ]
+        if progress_map is not None:
+            data["progress"] = progress_map.get(order.id, [])
+        else:
+            data["progress"] = [
+                {
+                    "id": event.id,
+                    "stage": event.stage,
+                    "stage_label": event.get_stage_display(),
+                    "message": event.message,
+                    "created_at": event.created_at.isoformat(),
+                }
+                for event in ProgressEvent.objects.filter(order=order)
+            ]
+
     return data
+
+
+def orders_to_dict_list(orders, include_detail=False):
+    order_list = list(orders)
+    review_map = _build_review_map(order_list)
+
+    progress_map = None
+    if include_detail:
+        order_ids = [o.id for o in order_list]
+        progress_map = _build_progress_map(order_ids)
+
+    return [
+        order_to_dict(order, include_detail=include_detail, review_map=review_map, progress_map=progress_map)
+        for order in order_list
+    ]

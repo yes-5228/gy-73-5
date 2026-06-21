@@ -10,7 +10,7 @@ from tracking.models import ProgressEvent
 from workers.models import Worker
 
 from .models import MoveOrder
-from .serializers import order_to_dict
+from .serializers import order_to_dict, orders_to_dict_list
 
 
 def read_json(request):
@@ -31,7 +31,7 @@ def order_list(request):
         queryset = MoveOrder.objects.select_related("claimed_by", "assigned_to")
         if status_filter:
             queryset = queryset.filter(status=status_filter)
-        return JsonResponse({"orders": [order_to_dict(order) for order in queryset]})
+        return JsonResponse({"orders": orders_to_dict_list(queryset)})
 
     payload = read_json(request)
     required = ["customer_name", "customer_phone", "origin", "destination", "move_date", "move_time"]
