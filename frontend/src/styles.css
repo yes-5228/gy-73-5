@@ -565,6 +565,41 @@ select:disabled {
   background: #f3f4f6;
 }
 
+.current-review-display {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.current-review-label {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.current-review-stars {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rating-text {
+  color: #374151;
+  font-weight: 700;
+}
+
+.current-review-comment {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
 .form-field {
   display: grid;
   gap: 6px;
